@@ -7,6 +7,7 @@ import { UserService } from 'src/user/user.service';
 import { ConfigService } from '@nestjs/config';
 import { ENV_JWT_KEY } from './types/enums';
 import { JwtPayload } from './strategies/accessToken.strategy';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,20 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
+
+  async signIn(loginDto: LoginDto) {
+    const user = await this.userService.findUserByEmail(loginDto.email);
+    if (!user) throw new BadRequestException('User does not exist');
+    const isPasswordMatches = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
+    if (!isPasswordMatches)
+      throw new BadRequestException('Password is incorrect!');
+    const tokens = await this.getTokens(user);
+    this.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
+  }
 
   async signUp(createUserDto: CreateUserDto) {
     const isUserExists = await this.userService.findUserByEmail(
