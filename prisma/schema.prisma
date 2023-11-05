@@ -11,11 +11,24 @@ model Users {
   id            String                 @id @default(uuid())
   firstName     String                 @map("first_name")
   lastName      String                 @map("last_name")
+  email         String
   password      String
   messages      Messages[]
   conversations UsersToConversations[]
+  tokens        Tokens[]
 
   @@map("users")
+}
+
+model Tokens {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  exp       DateTime
+  user      Users    @relation(fields: [userId], references: [id])
+  userId    String
+  userAgent String   @map("user_agent")
+
+  @@map("tokens")
 }
 
 model Messages {
