@@ -15,7 +15,18 @@ export class UserService {
   }
 
   async findUserByEmail(email: string) {
-    return await this.prismaService.users.findFirst({ where: { email } });
+    return await this.prismaService.users.findFirst({
+      where: { email },
+    });
+  }
+
+  async updateUserRefreshToken(id: string, refreshToken: string) {
+    return await this.prismaService.users.update({
+      where: { id },
+      data: {
+        refreshToken,
+      },
+    });
   }
 
   find() {
