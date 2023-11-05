@@ -20,7 +20,10 @@ export class UserService {
     });
   }
 
-  async updateUserRefreshToken(id: string, refreshToken: string) {
+  async updateUserRefreshToken(
+    id: string,
+    { refreshToken }: { refreshToken: string },
+  ) {
     return await this.prismaService.users.update({
       where: { id },
       data: {
@@ -29,7 +32,11 @@ export class UserService {
     });
   }
 
-  find() {
+  findById(id: string) {
+    return this.prismaService.users.findUnique({ where: { id } });
+  }
+
+  findAll() {
     return this.prismaService.users.findMany();
   }
 }

@@ -13,9 +13,9 @@ model Users {
   lastName      String                 @map("last_name")
   email         String
   password      String
+  refreshToken  String                 @default("")
   messages      Messages[]
   conversations UsersToConversations[]
-  refreshToken  String                 @default("")
 
   @@map("users")
 }

@@ -48,6 +48,10 @@ export class AuthService {
     return tokens;
   }
 
+  async logout(userId: string) {
+    return await this.userService.updateUserRefreshToken(userId, { refreshToken: '' });
+  }
+
   private async hashData(data: string) {
     const saltRounds = 10;
     return await bcrypt.hash(data, saltRounds);
@@ -86,6 +90,8 @@ export class AuthService {
 
   private async updateRefreshToken(userId: string, refreshToken: string) {
     const hashToken = await this.hashData(refreshToken);
-    await this.userService.updateUserRefreshToken(userId, hashToken);
+    await this.userService.updateUserRefreshToken(userId, {
+      refreshToken: hashToken,
+    });
   }
 }
