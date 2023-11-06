@@ -39,8 +39,11 @@ export class AuthService {
       throw new BadRequestException('User already exist');
     }
     const hashPassword = await this.hashData(createUserDto.password);
+    const { firstName, lastName, email } = createUserDto;
     const user = await this.userService.createUser({
-      ...createUserDto,
+      firstName,
+      lastName,
+      email,
       password: hashPassword,
     });
     const tokens = await this.getTokens(user);
@@ -49,7 +52,9 @@ export class AuthService {
   }
 
   async logout(userId: string) {
-    return await this.userService.updateUserRefreshToken(userId, { refreshToken: '' });
+    return await this.userService.updateUserRefreshToken(userId, {
+      refreshToken: '',
+    });
   }
 
   private async hashData(data: string) {

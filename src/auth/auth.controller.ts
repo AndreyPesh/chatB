@@ -16,13 +16,13 @@ export class AuthController {
 
   @Post('login')
   signIn(@Body() loginUserDto: LoginDto) {
-    return this.authService.signIn(loginUserDto);
+    // return this.authService.signIn(loginUserDto);
   }
 
   @UseGuards(AccessTokenGuard)
   @Get('logout')
   logout(@Req() req: Request) {
     //@ts-ignore
-    return this.authService.logout(req.user.id)
+    return this.authService.logout(req.user.id);
   }
 }
