@@ -1,14 +1,14 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { LoginUserDto } from './dto/user-dto';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
+import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 
-@Controller()
+@Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}
 
-  @Post('login')
-  loginUser(@Body() loginUserData: LoginUserDto) {
-    this.userService.login(loginUserData);
-    return this.userService.find();
+  @UseGuards(AccessTokenGuard)
+  @Get(':id')
+  getUserById(@Param('id') id: string) {
+    return this.userService.findById(id);
   }
 }
