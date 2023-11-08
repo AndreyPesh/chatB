@@ -25,8 +25,16 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  signUp(@Body() createUserDto: CreateUserDto) {
-    return this.authService.signUp(createUserDto);
+  async signUp(
+    @Body() createUserDto: CreateUserDto,
+    @Res() response: Response,
+  ) {
+    const tokens = await this.authService.signUp(createUserDto);
+    if (tokens) {
+      this.setTokensToCookie(tokens, response);
+      return;
+    }
+    throw new BadRequestException('Cant login!');
   }
 
   @Post('login')
@@ -41,9 +49,12 @@ export class AuthController {
 
   @UseGuards(AccessTokenGuard)
   @Get('logout')
-  logout(@Req() req: Request) {
+  async logout(@Req() req: Request, @Res() res: Response) {
+    console.log(req.user);
+
     //@ts-ignore
-    return this.authService.logout(req.user.id);
+    await this.authService.logout(req.user.id);
+    this.clearCookie(res);
   }
 
   private setTokensToCookie(
@@ -61,9 +72,23 @@ export class AuthController {
       httpOnly: true,
       sameSite: 'lax',
       // expires: new Date(Date.now() + 2000),
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month 
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month
+      path: '/',
+    });
+    res.cookie(COOKIE.IS_AUTH, true, {
+      httpOnly: false,
+      sameSite: 'lax',
+      // expires: new Date(Date.now() + 2000),
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month
       path: '/',
     });
     res.status(HttpStatus.CREATED).json({ ...tokens });
+  }
+
+  private clearCookie(res: Response) {
+    res.cookie(COOKIE.ACCESS, '', { maxAge: 0 });
+    res.cookie(COOKIE.REFRESH, '', { maxAge: 0 });
+    res.cookie(COOKIE.IS_AUTH, false, { maxAge: 0 });
+    res.status(HttpStatus.CREATED).json();
   }
 }
