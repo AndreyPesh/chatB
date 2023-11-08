@@ -54,14 +54,14 @@ export class AuthController {
       httpOnly: true,
       sameSite: 'lax',
       // expires: new Date(Date.now() + 2000),
-      maxAge: 1 * 60 * 60 * 1000,
+      maxAge: 12 * 60 * 60 * 1000, //12 hours
       path: '/',
     });
     res.cookie(COOKIE.REFRESH, tokens.refreshToken, {
       httpOnly: true,
       sameSite: 'lax',
       // expires: new Date(Date.now() + 2000),
-      maxAge: 2 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month 
       path: '/',
     });
     res.status(HttpStatus.CREATED).json({ ...tokens });
