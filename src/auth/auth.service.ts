@@ -20,13 +20,17 @@ export class AuthService {
   async signIn(loginDto: LoginDto) {
     const user = await this.userService.findUserByEmail(loginDto.email);
     if (!user) throw new BadRequestException('User does not exist');
+
     const isPasswordMatches = await bcrypt.compare(
       loginDto.password,
       user.password,
     );
+
     if (!isPasswordMatches)
       throw new BadRequestException('Password is incorrect!');
+
     const tokens = await this.getTokens(user);
+
     this.updateRefreshToken(user.id, tokens.refreshToken);
     return tokens;
   }
