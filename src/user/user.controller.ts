@@ -1,4 +1,5 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
 import { UserService } from './user.service';
 import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 
@@ -8,7 +9,7 @@ export class UserController {
 
   @UseGuards(AccessTokenGuard)
   @Get(':id')
-  getUserById(@Param('id') id: string) {
+  getUserById(@Param('id') id: string, @Req() req: Request) {
     return this.userService.findById(id);
   }
 }

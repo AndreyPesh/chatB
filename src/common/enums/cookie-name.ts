@@ -1,4 +1,4 @@
 export const enum COOKIE {
-  REFRESH = 'refresh-token',
-  ACCESS = 'access-token',
+  REFRESH = 'refresh_token',
+  ACCESS = 'access_token',
 }
