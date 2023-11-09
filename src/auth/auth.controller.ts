@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpStatus,
   Post,
   Req,
   Res,
@@ -14,15 +13,11 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
-import { COOKIE } from 'src/common/enums/cookie-name';
-import { ConfigService } from '@nestjs/config';
+import { clearCookie, setTokensToCookie } from './helpers/cookie.helper';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   async signUp(
@@ -31,17 +26,17 @@ export class AuthController {
   ) {
     const tokens = await this.authService.signUp(createUserDto);
     if (tokens) {
-      this.setTokensToCookie(tokens, response);
+      setTokensToCookie(tokens, response);
       return;
     }
-    throw new BadRequestException('Cant login!');
+    throw new BadRequestException('Cant register!');
   }
 
   @Post('login')
   async signIn(@Body() loginUserDto: LoginDto, @Res() response: Response) {
     const tokens = await this.authService.signIn(loginUserDto);
     if (tokens) {
-      this.setTokensToCookie(tokens, response);
+      setTokensToCookie(tokens, response);
       return;
     }
     throw new BadRequestException('Cant login!');
@@ -54,41 +49,6 @@ export class AuthController {
 
     //@ts-ignore
     await this.authService.logout(req.user.id);
-    this.clearCookie(res);
-  }
-
-  private setTokensToCookie(
-    tokens: { accessToken: string; refreshToken: string },
-    res: Response,
-  ) {
-    res.cookie(COOKIE.ACCESS, tokens.accessToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      // expires: new Date(Date.now() + 2000),
-      maxAge: 12 * 60 * 60 * 1000, //12 hours
-      path: '/',
-    });
-    res.cookie(COOKIE.REFRESH, tokens.refreshToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      // expires: new Date(Date.now() + 2000),
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month
-      path: '/',
-    });
-    res.cookie(COOKIE.IS_AUTH, true, {
-      httpOnly: false,
-      sameSite: 'lax',
-      // expires: new Date(Date.now() + 2000),
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month
-      path: '/',
-    });
-    res.status(HttpStatus.CREATED).json({ ...tokens });
-  }
-
-  private clearCookie(res: Response) {
-    res.cookie(COOKIE.ACCESS, '', { maxAge: 0 });
-    res.cookie(COOKIE.REFRESH, '', { maxAge: 0 });
-    res.cookie(COOKIE.IS_AUTH, false, { maxAge: 0 });
-    res.status(HttpStatus.CREATED).json();
+    clearCookie(res);
   }
 }
