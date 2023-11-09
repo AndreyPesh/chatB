@@ -4,16 +4,17 @@ import {
   Controller,
   Get,
   Post,
-  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 import { clearCookie, setTokensToCookie } from './helpers/cookie.helper';
+import { User } from 'src/common/decorators/user.decorator';
+import { JwtPayload } from './strategies/accessToken.strategy';
 
 @Controller('auth')
 export class AuthController {
@@ -44,11 +45,8 @@ export class AuthController {
 
   @UseGuards(AccessTokenGuard)
   @Get('logout')
-  async logout(@Req() req: Request, @Res() res: Response) {
-    console.log(req.user);
-
-    //@ts-ignore
-    await this.authService.logout(req.user.id);
+  async logout(@User() user: JwtPayload, @Res() res: Response) {
+    await this.authService.logout(user.id);
     clearCookie(res);
   }
 }
