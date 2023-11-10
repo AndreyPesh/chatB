@@ -3,6 +3,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Post,
   Req,
   Res,
@@ -17,31 +19,25 @@ import { clearCookie, setTokensToCookie } from './helpers/cookie.helper';
 import { User } from 'src/common/decorators/user.decorator';
 import { JwtPayload } from './strategies/accessToken.strategy';
 import { COOKIE } from 'src/common/enums/cookie-name';
-import { RefreshTokenGuard } from 'src/common/guards/refreshToke.guard';
+import { RefreshTokenGuard } from 'src/common/guards/refreshToken.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @HttpCode(HttpStatus.CREATED)
   @Post('register')
-  async signUp(
-    @Body() createUserDto: CreateUserDto,
-    @Res() response: Response,
-  ) {
-    const tokens = await this.authService.signUp(createUserDto);
-    if (tokens) {
-      setTokensToCookie(tokens, response);
-      return;
-    }
-    throw new BadRequestException('Cant register!');
+  async signUp(@Body() createUserDto: CreateUserDto) {
+    const isUserCreated = await this.authService.signUp(createUserDto);
+    return { isUserCreated };
   }
 
   @Post('login')
   async signIn(@Body() loginUserDto: LoginDto, @Res() response: Response) {
-    const tokens = await this.authService.signIn(loginUserDto);
+    const { tokens, user } = await this.authService.signIn(loginUserDto);
     if (tokens) {
       setTokensToCookie(tokens, response);
-      return;
+      return response.status(HttpStatus.OK).json(user);
     }
     throw new BadRequestException('Cant login!');
   }

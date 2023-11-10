@@ -36,7 +36,14 @@ export class UserService {
     return this.prismaService.users.findUnique({ where: { id } });
   }
 
-  findAll() {
-    return this.prismaService.users.findMany();
+  async findAll() {
+    return await this.prismaService.users.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
+    });
   }
 }

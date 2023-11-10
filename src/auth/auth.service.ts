@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { ENV_JWT_KEY } from './types/enums';
 import { JwtPayload } from './strategies/accessToken.strategy';
 import { LoginDto } from './dto/login.dto';
+import { ExcludePasswordAndToken } from './helpers/response';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +33,7 @@ export class AuthService {
     const tokens = await this.getTokens(user);
 
     this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+    return { tokens, user: ExcludePasswordAndToken(user) };
   }
 
   async signUp(createUserDto: CreateUserDto) {
@@ -48,9 +49,8 @@ export class AuthService {
       email,
       password: hashPassword,
     });
-    const tokens = await this.getTokens(user);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+
+    return user ? true : false;
   }
 
   async refreshTokens(refreshToken: string, user: JwtPayload) {
@@ -61,7 +61,7 @@ export class AuthService {
       refreshToken,
       currentUser.refreshToken,
     );
-    
+
     if (isRefreshTokensMatch) {
       const tokens = await this.getTokens(currentUser);
       await this.updateRefreshToken(currentUser.id, tokens.refreshToken);
