@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   Post,
   Req,
@@ -24,17 +25,11 @@ import { RefreshTokenGuard } from 'src/common/guards/refreshToken.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @HttpCode(HttpStatus.CREATED)
   @Post('register')
-  async signUp(
-    @Body() createUserDto: CreateUserDto,
-    @Res() response: Response,
-  ) {
-    const tokens = await this.authService.signUp(createUserDto);
-    if (tokens) {
-      setTokensToCookie(tokens, response);
-      return;
-    }
-    throw new BadRequestException('Cant register!');
+  async signUp(@Body() createUserDto: CreateUserDto) {
+    const isUserCreated = await this.authService.signUp(createUserDto);
+    return { isUserCreated };
   }
 
   @Post('login')
@@ -42,7 +37,7 @@ export class AuthController {
     const { tokens, user } = await this.authService.signIn(loginUserDto);
     if (tokens) {
       setTokensToCookie(tokens, response);
-      return response.status(HttpStatus.CREATED).json(user);
+      return response.status(HttpStatus.OK).json(user);
     }
     throw new BadRequestException('Cant login!');
   }
