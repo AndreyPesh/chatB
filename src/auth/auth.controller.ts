@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpStatus,
   Post,
   Req,
   Res,
@@ -38,10 +39,10 @@ export class AuthController {
 
   @Post('login')
   async signIn(@Body() loginUserDto: LoginDto, @Res() response: Response) {
-    const tokens = await this.authService.signIn(loginUserDto);
+    const { tokens, user } = await this.authService.signIn(loginUserDto);
     if (tokens) {
       setTokensToCookie(tokens, response);
-      return;
+      return response.status(HttpStatus.CREATED).json(user);
     }
     throw new BadRequestException('Cant login!');
   }

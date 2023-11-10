@@ -27,7 +27,6 @@ export const setTokensToCookie = (
     maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month
     path: '/',
   });
-  res.status(HttpStatus.CREATED).json({ ...tokens });
 };
 
 export const clearCookie = (res: Response) => {
