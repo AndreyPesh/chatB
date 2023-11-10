@@ -16,8 +16,8 @@ import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 import { clearCookie, setTokensToCookie } from './helpers/cookie.helper';
 import { User } from 'src/common/decorators/user.decorator';
 import { JwtPayload } from './strategies/accessToken.strategy';
-import { RefreshTokenGuard } from 'src/common/guards/refreshToken.guard';
 import { COOKIE } from 'src/common/enums/cookie-name';
+import { RefreshTokenGuard } from 'src/common/guards/refreshToke.guard';
 
 @Controller('auth')
 export class AuthController {

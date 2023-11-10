@@ -56,10 +56,12 @@ export class AuthService {
   async refreshTokens(refreshToken: string, user: JwtPayload) {
     const currentUser = await this.userService.findUserByEmail(user.email);
     if (!currentUser) throw new BadRequestException('User does not exist');
+
     const isRefreshTokensMatch = await bcrypt.compare(
       refreshToken,
       currentUser.refreshToken,
     );
+    
     if (isRefreshTokensMatch) {
       const tokens = await this.getTokens(currentUser);
       await this.updateRefreshToken(currentUser.id, tokens.refreshToken);
