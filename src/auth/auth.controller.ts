@@ -4,17 +4,20 @@ import {
   Controller,
   Get,
   Post,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 import { clearCookie, setTokensToCookie } from './helpers/cookie.helper';
 import { User } from 'src/common/decorators/user.decorator';
 import { JwtPayload } from './strategies/accessToken.strategy';
+import { COOKIE } from 'src/common/enums/cookie-name';
+import { RefreshTokenGuard } from 'src/common/guards/refreshToke.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -41,6 +44,22 @@ export class AuthController {
       return;
     }
     throw new BadRequestException('Cant login!');
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Post('refresh')
+  async refreshToken(
+    @User() user: JwtPayload,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const refreshToken = req.cookies[COOKIE.REFRESH];
+    if (refreshToken) {
+      const tokens = await this.authService.refreshTokens(refreshToken, user);
+      setTokensToCookie(tokens, res);
+      return;
+    }
+    throw new BadRequestException('Something went wrong!');
   }
 
   @UseGuards(AccessTokenGuard)
