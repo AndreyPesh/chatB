@@ -15,6 +15,7 @@ import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 import { clearCookie, setTokensToCookie } from './helpers/cookie.helper';
 import { User } from 'src/common/decorators/user.decorator';
 import { JwtPayload } from './strategies/accessToken.strategy';
+import { RefreshTokenGuard } from 'src/common/guards/refreshToken.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -41,6 +42,13 @@ export class AuthController {
       return;
     }
     throw new BadRequestException('Cant login!');
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Post('refresh')
+  async refreshToken(@User() user: JwtPayload,) {
+    console.log(user);
+    
   }
 
   @UseGuards(AccessTokenGuard)
