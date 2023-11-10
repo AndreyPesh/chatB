@@ -36,9 +36,7 @@ export class AuthService {
   }
 
   async signUp(createUserDto: CreateUserDto) {
-    const isUserExists = await this.userService.findUserByEmail(
-      createUserDto.email,
-    );
+    const isUserExists = await this.isUserExist(createUserDto.email);
     if (isUserExists) {
       throw new BadRequestException('User already exist');
     }
@@ -55,7 +53,20 @@ export class AuthService {
     return tokens;
   }
 
-  async refreshTokens() {}
+  async refreshTokens(refreshToken: string, user: JwtPayload) {
+    const currentUser = await this.userService.findUserByEmail(user.email);
+    if (!currentUser) throw new BadRequestException('User does not exist');
+    const isRefreshTokensMatch = await bcrypt.compare(
+      refreshToken,
+      currentUser.refreshToken,
+    );
+    if (isRefreshTokensMatch) {
+      const tokens = await this.getTokens(currentUser);
+      await this.updateRefreshToken(currentUser.id, tokens.refreshToken);
+      return tokens;
+    }
+    throw new BadRequestException('Cant update refresh token!');
+  }
 
   async logout(userId: string) {
     return await this.userService.updateUserRefreshToken(userId, {
@@ -66,6 +77,11 @@ export class AuthService {
   private async hashData(data: string) {
     const saltRounds = 10;
     return await bcrypt.hash(data, saltRounds);
+  }
+
+  private async isUserExist(userEmail: string) {
+    const isUserExists = await this.userService.findUserByEmail(userEmail);
+    return isUserExists ? true : false;
   }
 
   async getTokens(user: Users) {
