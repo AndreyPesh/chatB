@@ -7,8 +7,10 @@ export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
 
   @Post('create')
-  createConversation(@Body() { userId, participantId }: InterlocutorsData) {
-    return userId;
+  async createConversation(@Body() interlocutorsData: InterlocutorsData) {
+    const conversation =
+      await this.conversationService.startChat(interlocutorsData);
+    return conversation;
   }
 
   @Post(':id')
