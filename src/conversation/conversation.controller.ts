@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post, Get } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { InterlocutorsData } from './dto/InterlocutorsData';
 
@@ -13,7 +13,7 @@ export class ConversationController {
     return conversation;
   }
 
-  @Post(':id')
+  @Get('list/:id')
   getListConversation(@Param('id') id: string) {
     return this.conversationService.getAllConversationByUserId(id);
   }
