@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ExcludePasswordAndToken } from 'src/auth/helpers/response';
 
 @Injectable()
 export class UserService {
@@ -32,8 +33,9 @@ export class UserService {
     });
   }
 
-  findById(id: string) {
-    return this.prismaService.users.findUnique({ where: { id } });
+  async findById(id: string) {
+    const user = await this.prismaService.users.findUnique({ where: { id } });
+    return ExcludePasswordAndToken(user);
   }
 
   async findAll() {
