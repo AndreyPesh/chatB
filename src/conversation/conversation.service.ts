@@ -12,4 +12,8 @@ export class ConversationService {
       },
     });
   }
+
+  async createConversation(userId: string, participantId: string) {
+    return await this.prismaService.conversations.create({ data: {} });
+  }
 }
