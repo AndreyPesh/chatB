@@ -18,6 +18,6 @@ export class ConversationController {
   async getListConversation(@Param('id') id: string) {
     const conversations =
       await this.conversationService.getAllConversationByUserId(id);
-    return transformConversationsWithUserData(conversations);
+    return transformConversationsWithUserData(conversations, id);
   }
 }
