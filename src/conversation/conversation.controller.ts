@@ -1,6 +1,7 @@
 import { Body, Controller, Param, Post, Get } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { InterlocutorsData } from './dto/InterlocutorsData';
+import { transformConversationsWithUserData } from './helpers/transformConversationWithUsersData';
 
 @Controller('conversation')
 export class ConversationController {
@@ -14,7 +15,9 @@ export class ConversationController {
   }
 
   @Get('list/:id')
-  getListConversation(@Param('id') id: string) {
-    return this.conversationService.getAllConversationByUserId(id);
+  async getListConversation(@Param('id') id: string) {
+    const conversations =
+      await this.conversationService.getAllConversationByUserId(id);
+    return transformConversationsWithUserData(conversations);
   }
 }

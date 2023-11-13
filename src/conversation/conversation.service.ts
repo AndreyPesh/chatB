@@ -7,11 +7,21 @@ export class ConversationService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getAllConversationByUserId(userId: string) {
-    return await this.prismaService.usersToConversations.findMany({
-      where: {
-        userId,
-      },
-    });
+    const listAllUserConversations =
+      await this.prismaService.usersToConversations.findMany({
+        where: {
+          userId,
+        },
+        include: {
+          conversation: {
+            include: {
+              users: { include: { user: true } },
+              messages: true,
+            },
+          },
+        },
+      });
+    return listAllUserConversations;
   }
 
   async startChat(interlocutorsData: InterlocutorsData) {
