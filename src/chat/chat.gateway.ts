@@ -1,6 +1,8 @@
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import {
   MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -10,14 +12,18 @@ import {
   ServerToClientEvents,
   ClientToServerEvents,
   Message,
+  Unit,
 } from '../common/interfaces/chat.interface';
+import { UnitService } from 'src/unit/unit.service';
 
 @WebSocketGateway({
   cors: {
     origin: 'http://localhost:5173',
   },
 })
-export class ChatGateway {
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  constructor(private unitService: UnitService) {}
+
   @WebSocketServer() server: Server = new Server<
     ServerToClientEvents,
     ClientToServerEvents
@@ -26,12 +32,38 @@ export class ChatGateway {
   private logger = new Logger('ChatGateway');
 
   @SubscribeMessage('chat')
-  async handleEvent(
+  async handleChatEvent(
     @MessageBody()
     payload: Message,
   ): Promise<Message> {
     this.logger.log(payload);
-    this.server.emit('chat', payload); // broadcast messages
+    this.server.to(payload.roomName).emit('chat', payload); // broadcast messages
     return payload;
+  }
+
+  @SubscribeMessage('join_room')
+  async handleSetClientDataEvent(
+    @MessageBody()
+    payload: {
+      roomName: string;
+      unit: Unit;
+    },
+  ) {
+    if (payload.unit.socketId) {
+      this.logger.log(
+        `${payload.unit.socketId} is joining ${payload.roomName}`,
+      );
+      await this.server.in(payload.unit.socketId).socketsJoin(payload.roomName);
+      await this.unitService.addUnitToRoom(payload.roomName, payload.unit);
+    }
+  }
+
+  async handleConnection(socket: Socket): Promise<void> {
+    this.logger.log(`Socket connected: ${socket.id}`);
+  }
+
+  async handleDisconnect(socket: Socket): Promise<void> {
+    await this.unitService.removeUnitFromAllRooms(socket.id);
+    this.logger.log(`Socket disconnected: ${socket.id}`);
   }
 }
