@@ -1,52 +1,52 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { InterlocutorsData } from './dto/InterlocutorsData';
+// import { Injectable } from '@nestjs/common';
+// import { PrismaService } from 'src/prisma/prisma.service';
+// import { InterlocutorsData } from './dto/InterlocutorsData';
 
-@Injectable()
-export class ConversationService {
-  constructor(private readonly prismaService: PrismaService) {}
+// @Injectable()
+// export class ConversationService {
+//   constructor(private readonly prismaService: PrismaService) {}
 
-  async getAllConversationByUserId(userId: string) {
-    const listAllUserConversations =
-      await this.prismaService.usersToConversations.findMany({
-        where: {
-          userId,
-        },
-        include: {
-          conversation: {
-            include: {
-              users: { include: { user: true } },
-              messages: true,
-            },
-          },
-        },
-      });
-    return listAllUserConversations;
-  }
+//   async getAllConversationByUserId(userId: string) {
+//     const listAllUserConversations =
+//       await this.prismaService.usersToConversations.findMany({
+//         where: {
+//           userId,
+//         },
+//         include: {
+//           conversation: {
+//             include: {
+//               users: { include: { user: true } },
+//               messages: true,
+//             },
+//           },
+//         },
+//       });
+//     return listAllUserConversations;
+//   }
 
-  async startChat(interlocutorsData: InterlocutorsData) {
-    const usersIdList: string[] = Object.values(interlocutorsData);
-    const conversation = await this.createConversation();
-    await this.addUsersToConversation(conversation.id, usersIdList);
-    return conversation;
-  }
+//   async startChat(interlocutorsData: InterlocutorsData) {
+//     const usersIdList: string[] = Object.values(interlocutorsData);
+//     const conversation = await this.createConversation();
+//     await this.addUsersToConversation(conversation.id, usersIdList);
+//     return conversation;
+//   }
 
-  async createConversation() {
-    const conversation = await this.prismaService.conversations.create({
-      data: {},
-    });
-    return conversation;
-  }
+//   async createConversation() {
+//     const conversation = await this.prismaService.conversations.create({
+//       data: {},
+//     });
+//     return conversation;
+//   }
 
-  async addUsersToConversation(conversationId: string, usersIdList: string[]) {
-    const listConversations = usersIdList.map((userId) =>
-      this.prismaService.usersToConversations.create({
-        data: {
-          user: { connect: { id: userId } },
-          conversation: { connect: { id: conversationId } },
-        },
-      }),
-    );
-    return await Promise.all(listConversations);
-  }
-}
+//   async addUsersToConversation(conversationId: string, usersIdList: string[]) {
+//     const listConversations = usersIdList.map((userId) =>
+//       this.prismaService.usersToConversations.create({
+//         data: {
+//           user: { connect: { id: userId } },
+//           conversation: { connect: { id: conversationId } },
+//         },
+//       }),
+//     );
+//     return await Promise.all(listConversations);
+//   }
+// }

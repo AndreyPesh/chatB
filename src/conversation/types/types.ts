@@ -1,5 +1,5 @@
-import { ConversationService } from '../conversation.service';
+// import { ConversationService } from '../conversation.service';
 
-export type listConversationsData = Awaited<
-  ReturnType<ConversationService['getAllConversationByUserId']>
->;
+// export type listConversationsData = Awaited<
+//   ReturnType<ConversationService['getAllConversationByUserId']>
+// >;
