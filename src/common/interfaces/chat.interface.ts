@@ -1,10 +1,17 @@
-export interface User {
-  userId: string;
-  userName: string;
+export interface Unit {
+  unitId: string;
+  unitName: string;
+  socketId: string;
+}
+
+export interface Room {
+  name: string;
+  host: Unit;
+  units: Unit[];
 }
 
 export interface Message {
-  user: User;
+  unit: Unit;
   timeSent: string;
   message: string;
 }
@@ -15,4 +22,5 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   chat: (e: Message) => void;
+  join_room: (e: { unit: Unit; roomName: string }) => void;
 }

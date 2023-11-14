@@ -6,9 +6,10 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { ChatModule } from './chat/chat.module';
+import { UnitModule } from './unit/unit.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, AuthModule, ConversationModule, ChatModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, AuthModule, ConversationModule, ChatModule, UnitModule],
   controllers: [AppController],
   providers: [AppService],
 })
