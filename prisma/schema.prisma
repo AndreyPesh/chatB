@@ -8,16 +8,37 @@ datasource db {
 }
 
 model Users {
-  id            String                 @id @default(uuid())
-  firstName     String                 @map("first_name")
-  lastName      String                 @map("last_name")
-  email         String                 @unique
-  password      String
-  refreshToken  String                 @default("")
-  messages      Messages[]
-  conversations UsersToConversations[]
+  id           String        @id @default(uuid())
+  firstName    String        @map("first_name")
+  lastName     String        @map("last_name")
+  email        String        @unique
+  password     String
+  refreshToken String        @default("")
+  messages     Messages[]
+  // conversations UsersToConversations[]
+  rooms        UsersToRoom[]
 
   @@map("users")
+}
+
+model Room {
+  id       String     @id @default(uuid())
+  name     String
+  messages Messages[]
+
+  users UsersToRoom[]
+
+  @@map("room")
+}
+
+model UsersToRoom {
+  id     String @id @default(uuid())
+  room   Room   @relation(fields: [roomId], references: [id])
+  roomId String
+  user   Users  @relation(fields: [userId], references: [id])
+  userId String
+
+  @@map("user_to_room")
 }
 
 model Messages {
@@ -27,8 +48,11 @@ model Messages {
   author   Users  @relation(fields: [authorId], references: [id])
   authorId String
 
-  conversation   Conversations @relation(fields: [conversationId], references: [id])
-  conversationId String
+  room   Room   @relation(fields: [roomId], references: [id])
+  roomId String
+
+  // conversation   Conversations @relation(fields: [conversationId], references: [id])
+  // conversationId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -36,26 +60,26 @@ model Messages {
   @@map("messages")
 }
 
-model Conversations {
-  id String @id @default(uuid())
+// model Conversations {
+//   id String @id @default(uuid())
 
-  messages Messages[]
+//   messages Messages[]
 
-  users UsersToConversations[]
+//   users UsersToConversations[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
 
-  @@map("conversations")
-}
+//   @@map("conversations")
+// }
 
-model UsersToConversations {
-  id             String        @id @default(uuid())
-  conversation   Conversations @relation(fields: [conversationId], references: [id])
-  conversationId String
-  user           Users         @relation(fields: [userId], references: [id])
-  userId         String
+// model UsersToConversations {
+//   id             String        @id @default(uuid())
+//   conversation   Conversations @relation(fields: [conversationId], references: [id])
+//   conversationId String
+//   user           Users         @relation(fields: [userId], references: [id])
+//   userId         String
 
-  @@unique([userId, conversationId])  //terminate
-  @@map("users_to_conversations")
-}
+//   @@unique([userId, conversationId])  //terminate
+//   @@map("users_to_conversations")
+// }
