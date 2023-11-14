@@ -6,12 +6,12 @@ import { Room } from 'src/common/interfaces/chat.interface';
 export class UnitController {
   constructor(private unitService: UnitService) {}
 
-  @Get('api/rooms')
+  @Get('rooms')
   async getAllRooms(): Promise<Room[]> {
     return await this.unitService.getRooms();
   }
 
-  @Get('api/rooms/:room')
+  @Get('rooms/:room')
   async getRoom(@Param() params): Promise<Room> {
     const rooms = await this.unitService.getRooms();
     const room = await this.unitService.getRoomByName(params.room);
