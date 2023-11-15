@@ -31,6 +31,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private logger = new Logger('ChatGateway');
 
+  @SubscribeMessage('test')
+  async handleTestEvent(
+    @MessageBody()
+    payload: Message,
+  ): Promise<Message> {
+    this.logger.log('test socket', payload);
+    // this.server.to(payload.roomName).emit('chat', payload); // broadcast messages
+    return payload;
+  }
+
   @SubscribeMessage('chat')
   async handleChatEvent(
     @MessageBody()
@@ -49,11 +59,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       unit: Unit;
     },
   ) {
+    console.log(payload);
+    
     if (payload.unit.socketId) {
       this.logger.log(
         `${payload.unit.socketId} is joining ${payload.roomName}`,
       );
-      await this.server.in(payload.unit.socketId).socketsJoin(payload.roomName);
+      this.server.in(payload.unit.socketId).socketsJoin(payload.roomName);
       await this.unitService.addUnitToRoom(payload.roomName, payload.unit);
     }
   }
