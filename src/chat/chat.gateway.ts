@@ -16,6 +16,7 @@ import {
 } from '../common/interfaces/chat.interface';
 import { UnitService } from 'src/unit/unit.service';
 import { RoomService } from 'src/room/room.service';
+import { transformRoomWithUserData } from 'src/room/utils/transformRoomList';
 
 @WebSocketGateway({
   cors: {
@@ -67,17 +68,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         userId: payload.userId,
         participantId: payload.unit.unitId,
       });
-      this.sendListRooms();
+      await this.sendListRooms(payload.userId);
     }
   }
 
   @SubscribeMessage('list_rooms')
-  getListRooms() {
-    this.sendListRooms();
+  async getListRooms(
+    @MessageBody()
+    payload: {
+      userId: string;
+    },
+  ) {
+    await this.sendListRooms(payload.userId);
   }
 
-  sendListRooms() {
-    this.server.emit('rooms', this.unitService.getRooms());
+
+  async sendListRooms(userId: string) {
+    const roomList = await this.roomService.getAllRoomByUserId(userId);
+    const transformRoomList = transformRoomWithUserData(roomList, userId);
+    this.server.emit('rooms', transformRoomList);
   }
 
   async handleConnection(socket: Socket): Promise<void> {
