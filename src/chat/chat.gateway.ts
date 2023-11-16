@@ -15,6 +15,7 @@ import {
   Unit,
 } from '../common/interfaces/chat.interface';
 import { UnitService } from 'src/unit/unit.service';
+import { RoomService } from 'src/room/room.service';
 
 @WebSocketGateway({
   cors: {
@@ -22,7 +23,10 @@ import { UnitService } from 'src/unit/unit.service';
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private unitService: UnitService) {}
+  constructor(
+    private unitService: UnitService,
+    private roomService: RoomService,
+  ) {}
 
   @WebSocketServer()
   private server: Server = new Server<
@@ -47,6 +51,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody()
     payload: {
       roomName: string;
+      userId: string;
       unit: Unit;
     },
   ) {
@@ -55,7 +60,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         `${payload.unit.socketId} is joining ${payload.roomName}`,
       );
       this.server.in(payload.unit.socketId).socketsJoin(payload.roomName);
+      //--------------------------------------------------------------------------------------------------------
       await this.unitService.addUnitToRoom(payload.roomName, payload.unit);
+      //--------------------------------------------------------------------------------------------------------
+      await this.roomService.addUsersToRoom({
+        userId: payload.userId,
+        participantId: payload.unit.unitId,
+      });
       this.sendListRooms();
     }
   }
