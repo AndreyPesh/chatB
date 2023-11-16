@@ -15,6 +15,7 @@ import {
   Unit,
 } from '../common/interfaces/chat.interface';
 import { UnitService } from 'src/unit/unit.service';
+import { RoomService } from 'src/room/room.service';
 
 @WebSocketGateway({
   cors: {
@@ -22,24 +23,18 @@ import { UnitService } from 'src/unit/unit.service';
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private unitService: UnitService) {}
+  constructor(
+    private unitService: UnitService,
+    private roomService: RoomService,
+  ) {}
 
-  @WebSocketServer() server: Server = new Server<
+  @WebSocketServer()
+  private server: Server = new Server<
     ServerToClientEvents,
     ClientToServerEvents
   >();
 
   private logger = new Logger('ChatGateway');
-
-  @SubscribeMessage('test')
-  async handleTestEvent(
-    @MessageBody()
-    payload: Message,
-  ): Promise<Message> {
-    this.logger.log('test socket', payload);
-    // this.server.to(payload.roomName).emit('chat', payload); // broadcast messages
-    return payload;
-  }
 
   @SubscribeMessage('chat')
   async handleChatEvent(
@@ -56,18 +51,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody()
     payload: {
       roomName: string;
+      userId: string;
       unit: Unit;
     },
   ) {
-    console.log(payload);
-    
     if (payload.unit.socketId) {
       this.logger.log(
         `${payload.unit.socketId} is joining ${payload.roomName}`,
       );
       this.server.in(payload.unit.socketId).socketsJoin(payload.roomName);
+      //--------------------------------------------------------------------------------------------------------
       await this.unitService.addUnitToRoom(payload.roomName, payload.unit);
+      //--------------------------------------------------------------------------------------------------------
+      await this.roomService.addUsersToRoom({
+        userId: payload.userId,
+        participantId: payload.unit.unitId,
+      });
+      this.sendListRooms();
     }
+  }
+
+  @SubscribeMessage('list_rooms')
+  getListRooms() {
+    this.sendListRooms();
+  }
+
+  sendListRooms() {
+    this.server.emit('rooms', this.unitService.getRooms());
   }
 
   async handleConnection(socket: Socket): Promise<void> {
