@@ -24,22 +24,13 @@ import { UnitService } from 'src/unit/unit.service';
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private unitService: UnitService) {}
 
-  @WebSocketServer() server: Server = new Server<
+  @WebSocketServer()
+  private server: Server = new Server<
     ServerToClientEvents,
     ClientToServerEvents
   >();
 
   private logger = new Logger('ChatGateway');
-
-  @SubscribeMessage('test')
-  async handleTestEvent(
-    @MessageBody()
-    payload: Message,
-  ): Promise<Message> {
-    this.logger.log('test socket', payload);
-    // this.server.to(payload.roomName).emit('chat', payload); // broadcast messages
-    return payload;
-  }
 
   @SubscribeMessage('chat')
   async handleChatEvent(
@@ -59,15 +50,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       unit: Unit;
     },
   ) {
-    console.log(payload);
-    
     if (payload.unit.socketId) {
       this.logger.log(
         `${payload.unit.socketId} is joining ${payload.roomName}`,
       );
       this.server.in(payload.unit.socketId).socketsJoin(payload.roomName);
       await this.unitService.addUnitToRoom(payload.roomName, payload.unit);
+      this.sendListRooms();
     }
+  }
+
+  @SubscribeMessage('list_rooms')
+  getListRooms() {
+    this.sendListRooms();
+  }
+
+  sendListRooms() {
+    this.server.emit('rooms', this.unitService.getRooms());
   }
 
   async handleConnection(socket: Socket): Promise<void> {
