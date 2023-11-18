@@ -6,6 +6,24 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class RoomService {
   constructor(private readonly prismaService: PrismaService) {}
 
+  async getAllRoomByUserId(userId: string) {
+    const listAllUserRoom = await this.prismaService.usersToRoom.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        room: {
+          include: {
+            users: { include: { user: true } },
+            messages: true,
+          },
+        },
+      },
+    });
+
+    return listAllUserRoom;
+  }
+
   async createRoom({ userId, participantId }: CreateRoomDto) {
     const room = await this.prismaService.room.create({
       data: {
