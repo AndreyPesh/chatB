@@ -45,13 +45,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): Promise<Message> {
     this.logger.log(payload);
     this.server.to(payload.roomName).emit('chat', payload); // broadcast messages
+    // const socketList = await this.server.in(payload.roomName).fetchSockets();
+    // this.logger.log('sockets in room ', socketList);
     return payload;
   }
 
   @SubscribeMessage('join_room')
   async handleJoinRoomEvent(@MessageBody() payload: JoinRoomData) {
-    console.log(payload.socketId);
     const { socketId, roomName, userId, participantId } = payload;
+    // console.log(`join socked ID ${socketId}`);
+
     this.joinRoomUser(socketId, roomName);
     await this.roomService.addUsersToRoom({
       userId,
@@ -74,7 +77,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { userId, socketId } = payload;
     const roomList = await this.roomService.getAllRoomByUserId(userId);
     const transformRoomList = transformRoomWithUserData(roomList, userId);
-    // await this.sendListRooms(payload.userId);
+    transformRoomList.map((room) => {
+      this.joinRoomUser(socketId, room.roomName);
+    });
     this.server.emit(`rooms ${userId}`, transformRoomList);
   }
 

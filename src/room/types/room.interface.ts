@@ -1,4 +1,4 @@
-import { Messages } from "@prisma/client";
+import { Messages } from '@prisma/client';
 
 interface RoomUserData {
   id: string;
@@ -11,6 +11,7 @@ interface RoomUserData {
 
 export interface RoomData {
   id: string;
+  roomName: string;
   messages: Messages[];
   users: RoomUserData[];
 }
