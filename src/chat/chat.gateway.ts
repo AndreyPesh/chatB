@@ -75,12 +75,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     },
   ) {
     const { userId, socketId } = payload;
+
     const roomList = await this.roomService.getAllRoomByUserId(userId);
     const transformRoomList = transformRoomWithUserData(roomList, userId);
+    
     transformRoomList.map((room) => {
       this.joinRoomUser(socketId, room.roomName);
     });
-    this.server.emit(`rooms ${userId}`, transformRoomList);
+    // this.server.emit(`rooms ${userId}`, transformRoomList);
+    return transformRoomList;
   }
 
   // @SubscribeMessage('join_room')
