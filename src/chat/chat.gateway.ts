@@ -38,6 +38,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private logger = new Logger('ChatGateway');
 
+  @SubscribeMessage('count')
+  async handleCountRoomEvent(
+    @MessageBody()
+    payload: {
+      roomName: string;
+    },
+  ) {
+    const sockets = await this.server.to(payload.roomName).fetchSockets();
+    console.log(sockets);
+  }
+
   @SubscribeMessage('chat')
   async handleChatEvent(
     @MessageBody()
@@ -78,7 +89,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const roomList = await this.roomService.getAllRoomByUserId(userId);
     const transformRoomList = transformRoomWithUserData(roomList, userId);
-    
+
     transformRoomList.map((room) => {
       this.joinRoomUser(socketId, room.roomName);
     });
