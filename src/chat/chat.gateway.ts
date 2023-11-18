@@ -17,6 +17,7 @@ import {
 import { UnitService } from 'src/unit/unit.service';
 import { RoomService } from 'src/room/room.service';
 import { transformRoomWithUserData } from 'src/room/utils/transformRoomList';
+import { JoinRoomData } from './types/chat.interfaces';
 
 @WebSocketGateway({
   cors: {
@@ -48,28 +49,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join_room')
-  async handleSetClientDataEvent(
-    @MessageBody()
-    payload: {
-      roomName: string;
-      userId: string;
-      unit: Unit;
-    },
-  ) {
-    if (payload.unit.socketId) {
-      this.logger.log(
-        `${payload.unit.socketId} is joining ${payload.roomName}`,
-      );
-      this.server.in(payload.unit.socketId).socketsJoin(payload.roomName);
-      //--------------------------------------------------------------------------------------------------------
-      await this.unitService.addUnitToRoom(payload.roomName, payload.unit);
-      //--------------------------------------------------------------------------------------------------------
-      await this.roomService.addUsersToRoom({
-        userId: payload.userId,
-        participantId: payload.unit.unitId,
-      });
-      await this.sendListRooms(payload.userId);
-    }
+  async handleJoinRoomEvent(@MessageBody() payload: JoinRoomData) {
+    console.log(payload.socketId);
+    const { socketId, roomName, userId, participantId } = payload;
+    this.joinRoomUser(socketId, roomName);
+    await this.roomService.addUsersToRoom({
+      userId,
+      participantId,
+    });
+  }
+
+  joinRoomUser(userSocketId: string, roomName: string) {
+    this.server.in(userSocketId).socketsJoin(roomName);
   }
 
   @SubscribeMessage('list_rooms')
@@ -77,17 +68,58 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody()
     payload: {
       userId: string;
+      socketId: string;
     },
   ) {
-    await this.sendListRooms(payload.userId);
-  }
-
-
-  async sendListRooms(userId: string) {
+    const { userId, socketId } = payload;
     const roomList = await this.roomService.getAllRoomByUserId(userId);
     const transformRoomList = transformRoomWithUserData(roomList, userId);
-    this.server.emit('rooms', transformRoomList);
+    // await this.sendListRooms(payload.userId);
+    this.server.emit(`rooms ${userId}`, transformRoomList);
   }
+
+  // @SubscribeMessage('join_room')
+  // async handleSetClientDataEvent(
+  //   @MessageBody()
+  //   payload: {
+  //     roomName: string;
+  //     userId: string;
+  //     unit: Unit;
+  //   },
+  // ) {
+  //   if (payload.unit.socketId) {
+  //     this.logger.log(
+  //       `${payload.unit.socketId} is joining ${payload.roomName}`,
+  //     );
+  //     this.server.in(payload.unit.socketId).socketsJoin(payload.roomName);
+  //     //--------------------------------------------------------------------------------------------------------
+  //     // await this.unitService.addUnitToRoom(payload.roomName, payload.unit);
+  //     //--------------------------------------------------------------------------------------------------------
+  //     console.log(this.server);
+
+  //     await this.roomService.addUsersToRoom({
+  //       userId: payload.userId,
+  //       participantId: payload.unit.unitId,
+  //     });
+  //     await this.sendListRooms(payload.userId);
+  //   }
+  // }
+
+  // @SubscribeMessage('list_rooms')
+  // async getListRooms(
+  //   @MessageBody()
+  //   payload: {
+  //     userId: string;
+  //   },
+  // ) {
+  //   await this.sendListRooms(payload.userId);
+  // }
+
+  // async sendListRooms(userId: string) {
+  //   const roomList = await this.roomService.getAllRoomByUserId(userId);
+  //   const transformRoomList = transformRoomWithUserData(roomList, userId);
+  //   this.server.emit('rooms', transformRoomList);
+  // }
 
   async handleConnection(socket: Socket): Promise<void> {
     this.logger.log(`Socket connected: ${socket.id}`);
