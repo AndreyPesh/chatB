@@ -31,10 +31,10 @@ export class RoomService {
     return transformRoomList;
   }
 
-  async createRoom({ userId, participantId }: CreateRoomDto) {
+  async createRoom(roomName: string) {
     const room = await this.prismaService.room.create({
       data: {
-        name: `${participantId} ${userId}`,
+        name: roomName,
       },
     });
     return room;
@@ -53,13 +53,28 @@ export class RoomService {
     });
   }
 
-  async addUsersToRoom({ userId, participantId }: CreateRoomDto) {
-    const room = await this.createRoom({ userId, participantId });
+  async addUsersToRoom({ userId, participantId, roomName }: CreateRoomDto) {
+    const isRoomExist = await this.isRoomExist(roomName);
+    if (isRoomExist) {
+      return false;
+    }
+
+    const room = await this.createRoom(roomName);
     const listIdInterlocutors = Object.values({ userId, participantId });
-    Promise.all(
+    await Promise.all(
       listIdInterlocutors.map((userId) =>
         this.addUserToRoomById(userId, room.id),
       ),
     );
+    return true;
+  }
+
+  async isRoomExist(roomName: string) {
+    const room = await this.prismaService.room.findFirst({
+      where: {
+        name: roomName,
+      },
+    });
+    return room ? true : false;
   }
 }

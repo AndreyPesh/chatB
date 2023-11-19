@@ -15,7 +15,7 @@ import {
 } from '../common/interfaces/chat.interface';
 import { UnitService } from 'src/unit/unit.service';
 import { RoomService } from 'src/room/room.service';
-import { JoinRoomData } from './types/chat.interfaces';
+import { GetListRoomPayload, JoinRoomPayload } from './types/chat.interfaces';
 import { CHAT_EVENTS } from './types/chat.enums';
 
 @WebSocketGateway({
@@ -50,15 +50,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(CHAT_EVENTS.JOIN_USER_TO_ROOM)
-  async handleJoinRoomEvent(@MessageBody() payload: JoinRoomData) {
+  async handleJoinRoomEvent(@MessageBody() payload: JoinRoomPayload) {
     const { socketId, roomName, userId, participantId } = payload;
-
-    this.joinRoomUser(socketId, roomName);
-
-    await this.roomService.addUsersToRoom({
+    const isUserAddedToRoom = await this.roomService.addUsersToRoom({
       userId,
       participantId,
+      roomName,
     });
+    if (isUserAddedToRoom) this.joinRoomUser(socketId, roomName);
+    return isUserAddedToRoom;
   }
 
   joinRoomUser(userSocketId: string, roomName: string) {
@@ -66,14 +66,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(CHAT_EVENTS.USER_LIST_ROOM)
-  async getListRooms(
-    @MessageBody()
-    payload: {
-      userId: string;
-      socketId: string;
-    },
-  ) {
+  async getListRooms(@MessageBody() payload: GetListRoomPayload) {
     const { userId, socketId } = payload;
+
+    if (!userId || !socketId) {
+      return false;
+    }
 
     const userRoomsList = await this.roomService.getAllRoomByUserId(userId);
 
