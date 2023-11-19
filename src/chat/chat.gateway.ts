@@ -12,12 +12,11 @@ import {
   ServerToClientEvents,
   ClientToServerEvents,
   Message,
-  Unit,
 } from '../common/interfaces/chat.interface';
 import { UnitService } from 'src/unit/unit.service';
 import { RoomService } from 'src/room/room.service';
-import { transformRoomWithUserData } from 'src/room/utils/transformRoomList';
 import { JoinRoomData } from './types/chat.interfaces';
+import { CHAT_EVENTS } from './types/chat.enums';
 
 @WebSocketGateway({
   cors: {
@@ -38,35 +37,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private logger = new Logger('ChatGateway');
 
-  @SubscribeMessage('count')
-  async handleCountRoomEvent(
-    @MessageBody()
-    payload: {
-      roomName: string;
-    },
-  ) {
-    const sockets = await this.server.to(payload.roomName).fetchSockets();
-    console.log(sockets);
-  }
-
-  @SubscribeMessage('chat')
+  @SubscribeMessage(CHAT_EVENTS.CHAT)
   async handleChatEvent(
     @MessageBody()
     payload: Message,
   ): Promise<Message> {
-    this.logger.log(payload);
-    this.server.to(payload.roomName).emit('chat', payload); // broadcast messages
+    // this.logger.log(payload);
+    this.server.to(payload.roomName).emit(CHAT_EVENTS.CHAT, payload); // broadcast messages
     // const socketList = await this.server.in(payload.roomName).fetchSockets();
     // this.logger.log('sockets in room ', socketList);
     return payload;
   }
 
-  @SubscribeMessage('join_room')
+  @SubscribeMessage(CHAT_EVENTS.JOIN_USER_TO_ROOM)
   async handleJoinRoomEvent(@MessageBody() payload: JoinRoomData) {
     const { socketId, roomName, userId, participantId } = payload;
-    // console.log(`join socked ID ${socketId}`);
 
     this.joinRoomUser(socketId, roomName);
+
     await this.roomService.addUsersToRoom({
       userId,
       participantId,
@@ -77,7 +65,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.in(userSocketId).socketsJoin(roomName);
   }
 
-  @SubscribeMessage('list_rooms')
+  @SubscribeMessage(CHAT_EVENTS.USER_LIST_ROOM)
   async getListRooms(
     @MessageBody()
     payload: {
@@ -87,14 +75,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const { userId, socketId } = payload;
 
-    const roomList = await this.roomService.getAllRoomByUserId(userId);
-    const transformRoomList = transformRoomWithUserData(roomList, userId);
+    const userRoomsList = await this.roomService.getAllRoomByUserId(userId);
 
-    transformRoomList.map((room) => {
+    userRoomsList.map((room) => {
       this.joinRoomUser(socketId, room.roomName);
     });
-    // this.server.emit(`rooms ${userId}`, transformRoomList);
-    return transformRoomList;
+    return userRoomsList;
   }
 
   // @SubscribeMessage('join_room')
