@@ -17,5 +17,3 @@ export const transformRoomWithUserData = (
   });
   return roomList;
 };
-
-

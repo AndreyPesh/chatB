@@ -8,9 +8,10 @@ import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
 import { UnitModule } from './unit/unit.module';
 import { RoomModule } from './room/room.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, AuthModule, ChatModule, UnitModule, RoomModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, AuthModule, ChatModule, UnitModule, RoomModule, MessageModule],
   controllers: [AppController],
   providers: [AppService],
 })

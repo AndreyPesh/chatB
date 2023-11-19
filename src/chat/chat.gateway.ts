@@ -11,13 +11,13 @@ import { Logger } from '@nestjs/common';
 import {
   ServerToClientEvents,
   ClientToServerEvents,
-  Message,
-  Unit,
-} from '../common/interfaces/chat.interface';
+  MessagePayload,
+} from './types/chat.interfaces';
 import { UnitService } from 'src/unit/unit.service';
 import { RoomService } from 'src/room/room.service';
-import { transformRoomWithUserData } from 'src/room/utils/transformRoomList';
-import { JoinRoomData } from './types/chat.interfaces';
+import { GetListRoomPayload, JoinRoomPayload } from './types/chat.interfaces';
+import { CHAT_EVENTS } from './types/chat.enums';
+import { MessageService } from 'src/message/message.service';
 
 @WebSocketGateway({
   cors: {
@@ -28,6 +28,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private unitService: UnitService,
     private roomService: RoomService,
+    private messageService: MessageService,
   ) {}
 
   @WebSocketServer()
@@ -38,63 +39,51 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private logger = new Logger('ChatGateway');
 
-  @SubscribeMessage('count')
-  async handleCountRoomEvent(
-    @MessageBody()
-    payload: {
-      roomName: string;
-    },
-  ) {
-    const sockets = await this.server.to(payload.roomName).fetchSockets();
-    console.log(sockets);
-  }
-
-  @SubscribeMessage('chat')
+  @SubscribeMessage(CHAT_EVENTS.CHAT)
   async handleChatEvent(
     @MessageBody()
-    payload: Message,
-  ): Promise<Message> {
-    this.logger.log(payload);
-    this.server.to(payload.roomName).emit('chat', payload); // broadcast messages
-    // const socketList = await this.server.in(payload.roomName).fetchSockets();
-    // this.logger.log('sockets in room ', socketList);
-    return payload;
+    messagePayload: MessagePayload,
+  ): Promise<MessagePayload> {
+    // this.logger.log(messagePayload);
+    const message = await this.messageService.saveMessage(messagePayload);
+    if (message) {
+      this.server
+        .to(messagePayload.roomName)
+        .emit(CHAT_EVENTS.CHAT, message); // broadcast messages
+      return messagePayload;
+    }
   }
 
-  @SubscribeMessage('join_room')
-  async handleJoinRoomEvent(@MessageBody() payload: JoinRoomData) {
+  @SubscribeMessage(CHAT_EVENTS.JOIN_USER_TO_ROOM)
+  async handleJoinRoomEvent(@MessageBody() payload: JoinRoomPayload) {
     const { socketId, roomName, userId, participantId } = payload;
-    // console.log(`join socked ID ${socketId}`);
-
-    this.joinRoomUser(socketId, roomName);
-    await this.roomService.addUsersToRoom({
+    const isUserAddedToRoom = await this.roomService.addUsersToRoom({
       userId,
       participantId,
+      roomName,
     });
+    if (isUserAddedToRoom) this.joinRoomUser(socketId, roomName);
+    return isUserAddedToRoom;
   }
 
   joinRoomUser(userSocketId: string, roomName: string) {
     this.server.in(userSocketId).socketsJoin(roomName);
   }
 
-  @SubscribeMessage('list_rooms')
-  async getListRooms(
-    @MessageBody()
-    payload: {
-      userId: string;
-      socketId: string;
-    },
-  ) {
+  @SubscribeMessage(CHAT_EVENTS.USER_LIST_ROOM)
+  async getListRooms(@MessageBody() payload: GetListRoomPayload) {
     const { userId, socketId } = payload;
 
-    const roomList = await this.roomService.getAllRoomByUserId(userId);
-    const transformRoomList = transformRoomWithUserData(roomList, userId);
+    if (!userId || !socketId) {
+      return false;
+    }
 
-    transformRoomList.map((room) => {
+    const userRoomsList = await this.roomService.getAllRoomByUserId(userId);
+
+    userRoomsList.map((room) => {
       this.joinRoomUser(socketId, room.roomName);
     });
-    // this.server.emit(`rooms ${userId}`, transformRoomList);
-    return transformRoomList;
+    return userRoomsList;
   }
 
   // @SubscribeMessage('join_room')

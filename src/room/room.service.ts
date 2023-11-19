@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRoomDto } from './dto/CreateRoomDto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { transformRoomWithUserData } from './utils/transformRoomList';
 
 @Injectable()
 export class RoomService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async getAllRoomByUserId(userId: string) {
+  async getAllRoomByUserIdFromDB(userId: string) {
     const listAllUserRoom = await this.prismaService.usersToRoom.findMany({
       where: {
         userId,
@@ -24,10 +25,16 @@ export class RoomService {
     return listAllUserRoom;
   }
 
-  async createRoom({ userId, participantId }: CreateRoomDto) {
+  async getAllRoomByUserId(userId: string) {
+    const userRoomList = await this.getAllRoomByUserIdFromDB(userId);
+    const transformRoomList = transformRoomWithUserData(userRoomList, userId);
+    return transformRoomList;
+  }
+
+  async createRoom(roomName: string) {
     const room = await this.prismaService.room.create({
       data: {
-        name: `${participantId} ${userId}`,
+        name: roomName,
       },
     });
     return room;
@@ -46,13 +53,28 @@ export class RoomService {
     });
   }
 
-  async addUsersToRoom({ userId, participantId }: CreateRoomDto) {
-    const room = await this.createRoom({ userId, participantId });
+  async addUsersToRoom({ userId, participantId, roomName }: CreateRoomDto) {
+    const isRoomExist = await this.isRoomExist(roomName);
+    if (isRoomExist) {
+      return false;
+    }
+
+    const room = await this.createRoom(roomName);
     const listIdInterlocutors = Object.values({ userId, participantId });
-    Promise.all(
+    await Promise.all(
       listIdInterlocutors.map((userId) =>
         this.addUserToRoomById(userId, room.id),
       ),
     );
+    return true;
+  }
+
+  async isRoomExist(roomName: string) {
+    const room = await this.prismaService.room.findFirst({
+      where: {
+        name: roomName,
+      },
+    });
+    return room ? true : false;
   }
 }
