@@ -49,7 +49,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (message) {
       this.server
         .to(messagePayload.roomName)
-        .emit(CHAT_EVENTS.CHAT, messagePayload); // broadcast messages
+        .emit(CHAT_EVENTS.CHAT, message); // broadcast messages
       return messagePayload;
     }
   }
