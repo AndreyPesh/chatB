@@ -1,6 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { UnitService } from './unit.service';
-import { Room } from 'src/common/interfaces/chat.interface';
+import { Room } from '../chat/types/chat.interfaces';
 
 @Controller()
 export class UnitController {

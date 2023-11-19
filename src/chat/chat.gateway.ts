@@ -11,12 +11,13 @@ import { Logger } from '@nestjs/common';
 import {
   ServerToClientEvents,
   ClientToServerEvents,
-  Message,
-} from '../common/interfaces/chat.interface';
+  MessagePayload,
+} from './types/chat.interfaces';
 import { UnitService } from 'src/unit/unit.service';
 import { RoomService } from 'src/room/room.service';
 import { GetListRoomPayload, JoinRoomPayload } from './types/chat.interfaces';
 import { CHAT_EVENTS } from './types/chat.enums';
+import { MessageService } from 'src/message/message.service';
 
 @WebSocketGateway({
   cors: {
@@ -27,6 +28,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private unitService: UnitService,
     private roomService: RoomService,
+    private messageService: MessageService,
   ) {}
 
   @WebSocketServer()
@@ -40,13 +42,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(CHAT_EVENTS.CHAT)
   async handleChatEvent(
     @MessageBody()
-    payload: Message,
-  ): Promise<Message> {
-    // this.logger.log(payload);
-    this.server.to(payload.roomName).emit(CHAT_EVENTS.CHAT, payload); // broadcast messages
-    // const socketList = await this.server.in(payload.roomName).fetchSockets();
-    // this.logger.log('sockets in room ', socketList);
-    return payload;
+    messagePayload: MessagePayload,
+  ): Promise<MessagePayload> {
+    // this.logger.log(messagePayload);
+    const message = await this.messageService.saveMessage(messagePayload);
+    if (message) {
+      this.server
+        .to(messagePayload.roomName)
+        .emit(CHAT_EVENTS.CHAT, messagePayload); // broadcast messages
+      return messagePayload;
+    }
   }
 
   @SubscribeMessage(CHAT_EVENTS.JOIN_USER_TO_ROOM)

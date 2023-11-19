@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Room, Unit } from 'src/common/interfaces/chat.interface';
+import { Room, Unit } from '../chat/types/chat.interfaces';
 
 @Injectable()
 export class UnitService {

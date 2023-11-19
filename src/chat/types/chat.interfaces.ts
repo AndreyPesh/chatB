@@ -9,3 +9,32 @@ export interface GetListRoomPayload {
   userId: string;
   socketId: string;
 }
+
+export interface MessagePayload {
+  authorId: string;
+  message: string;
+  roomName: string;
+  roomId: string;
+}
+
+export interface ServerToClientEvents {
+  chat: (e: MessagePayload) => void;
+}
+
+export interface ClientToServerEvents {
+  // chat: (e: Message) => void;
+  // join_room: (e: { unit: Unit; roomName: string }) => void;
+}
+
+//-------------------------
+export interface Unit {
+  unitId: string;
+  unitName: string;
+  socketId: string;
+}
+
+export interface Room {
+  name: string;
+  host: Unit;
+  units: Unit[];
+}
