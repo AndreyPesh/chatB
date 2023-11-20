@@ -10,6 +10,11 @@ export interface GetListRoomPayload {
   socketId: string;
 }
 
+export interface UpdateRoomPayload {
+  roomId: string;
+  roomName: string;
+}
+
 export interface MessagePayload {
   authorId: string;
   message: string;

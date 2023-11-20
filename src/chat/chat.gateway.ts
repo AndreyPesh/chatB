@@ -12,6 +12,7 @@ import {
   ServerToClientEvents,
   ClientToServerEvents,
   MessagePayload,
+  UpdateRoomPayload,
 } from './types/chat.interfaces';
 import { UnitService } from 'src/unit/unit.service';
 import { RoomService } from 'src/room/room.service';
@@ -45,11 +46,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     messagePayload: MessagePayload,
   ): Promise<MessagePayload> {
     // this.logger.log(messagePayload);
+    const { roomId, roomName } = messagePayload;
+
     const message = await this.messageService.saveMessage(messagePayload);
+
     if (message) {
-      this.server
-        .to(messagePayload.roomName)
-        .emit(CHAT_EVENTS.CHAT, message); // broadcast messages
+      this.server.to(roomName).emit(CHAT_EVENTS.CHAT, message, {
+        roomId,
+        roomName,
+      });
       return messagePayload;
     }
   }
@@ -84,6 +89,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.joinRoomUser(socketId, room.roomName);
     });
     return userRoomsList;
+  }
+
+  @SubscribeMessage(CHAT_EVENTS.UPDATE_ROOM_EMIT)
+  async updateRoomById(@MessageBody() updateRoomPayload: UpdateRoomPayload) {
+    const { roomId, roomName } = updateRoomPayload;
+    const room = await this.roomService.getRoomById(roomId);
+    this.server.to(roomName).emit(CHAT_EVENTS.UPDATE_ROOM_LISTENER, room);
   }
 
   // @SubscribeMessage('join_room')

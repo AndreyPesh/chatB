@@ -31,6 +31,18 @@ export class RoomService {
     return transformRoomList;
   }
 
+  async getRoomById(roomId: string) {
+    const room = await this.prismaService.room.findUnique({
+      where: {
+        id: roomId,
+      },
+      include: {
+        messages: true,
+      },
+    });
+    return room;
+  }
+
   async createRoom(roomName: string) {
     const room = await this.prismaService.room.create({
       data: {
