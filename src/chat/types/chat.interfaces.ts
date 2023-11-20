@@ -22,6 +22,12 @@ export interface MessagePayload {
   roomId: string;
 }
 
+export interface ReadMessagePayload {
+  roomName: string;
+  roomId: string;
+  authorId: string;
+}
+
 export interface ServerToClientEvents {
   chat: (e: MessagePayload) => void;
 }
