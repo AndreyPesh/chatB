@@ -95,20 +95,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(CHAT_EVENTS.UPDATE_ROOM_EMIT)
   async updateRoomById(@MessageBody() updateRoomPayload: UpdateRoomPayload) {
     const { roomId, roomName } = updateRoomPayload;
-    const room = await this.roomService.getRoomById(roomId);
-    this.server.to(roomName).emit(CHAT_EVENTS.UPDATE_ROOM_LISTENER, room);
+    this.getRoomByIdAndSend(roomId, roomName);
   }
 
   @SubscribeMessage(CHAT_EVENTS.READ_MESSAGE_EMIT)
   async readMessage(@MessageBody() readMessagePayload: ReadMessagePayload) {
-    const { roomId, authorId } = readMessagePayload;
+    const { roomId, roomName, authorId } = readMessagePayload;
     const isMessagesReaded = await this.roomService.MarkAsReadMessage(
       roomId,
       authorId,
     );
     if (isMessagesReaded) {
-      console.log(`message in room ${roomId} readed`);
+      this.getRoomByIdAndSend(roomId, roomName);
     }
+  }
+
+  async getRoomByIdAndSend(roomId: string, roomName: string) {
+    const room = await this.roomService.getRoomById(roomId);
+    this.server.to(roomName).emit(CHAT_EVENTS.UPDATE_ROOM_LISTENER, room);
   }
   // @SubscribeMessage('join_room')
   // async handleSetClientDataEvent(

@@ -5,4 +5,5 @@ export const enum CHAT_EVENTS {
   UPDATE_ROOM_LISTENER = 'update_room_listener',
   CHAT = 'chat',
   READ_MESSAGE_EMIT = 'read_message_emit',
+  READ_MESSAGE = 'read_message',
 }
