@@ -16,7 +16,11 @@ export class RoomService {
         room: {
           include: {
             users: { include: { user: true } },
-            messages: true,
+            messages: {
+              orderBy: {
+                createdAt: 'asc',
+              },
+            },
           },
         },
       },
@@ -37,7 +41,11 @@ export class RoomService {
         id: roomId,
       },
       include: {
-        messages: true,
+        messages: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
       },
     });
     return room;
