@@ -13,6 +13,7 @@ import {
   ClientToServerEvents,
   MessagePayload,
   UpdateRoomPayload,
+  ReadMessagePayload,
 } from './types/chat.interfaces';
 import { UnitService } from 'src/unit/unit.service';
 import { RoomService } from 'src/room/room.service';
@@ -98,6 +99,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.to(roomName).emit(CHAT_EVENTS.UPDATE_ROOM_LISTENER, room);
   }
 
+  @SubscribeMessage(CHAT_EVENTS.READ_MESSAGE_EMIT)
+  async readMessage(@MessageBody() readMessagePayload: ReadMessagePayload) {
+    const { roomId, authorId } = readMessagePayload;
+    const isMessagesReaded = await this.roomService.MarkAsReadMessage(
+      roomId,
+      authorId,
+    );
+    if (isMessagesReaded) {
+      console.log(`message in room ${roomId} readed`);
+    }
+  }
   // @SubscribeMessage('join_room')
   // async handleSetClientDataEvent(
   //   @MessageBody()

@@ -89,4 +89,29 @@ export class RoomService {
     });
     return room ? true : false;
   }
+
+  async MarkAsReadMessage(roomId: string, authorId: string) {
+    const isMessagesReaded = await this.prismaService.room.update({
+      where: {
+        id: roomId,
+      },
+      data: {
+        messages: {
+          updateMany: {
+            where: {
+              isReaded: false,
+              authorId,
+            },
+            data: {
+              isReaded: true,
+            },
+          },
+        },
+      },
+      include: {
+        messages: true,
+      },
+    });
+    return isMessagesReaded;
+  }
 }
