@@ -48,7 +48,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): Promise<MessagePayload> {
     // this.logger.log(messagePayload);
     const { roomId, roomName } = messagePayload;
-
+    
     const message = await this.messageService.saveMessage(messagePayload);
 
     if (message) {
@@ -94,24 +94,31 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage(CHAT_EVENTS.UPDATE_ROOM_EMIT)
   async updateRoomById(@MessageBody() updateRoomPayload: UpdateRoomPayload) {
-    const { roomId, roomName } = updateRoomPayload;
-    this.getRoomByIdAndSend(roomId, roomName);
+    const { roomId, roomName, currentUserId } = updateRoomPayload;
+    this.getRoomByIdAndSend(roomId, roomName, currentUserId);
   }
 
   @SubscribeMessage(CHAT_EVENTS.READ_MESSAGE_EMIT)
   async readMessage(@MessageBody() readMessagePayload: ReadMessagePayload) {
-    const { roomId, roomName, authorId } = readMessagePayload;
+    const { roomId, roomName, authorId, currentUserId } = readMessagePayload;
     const isMessagesReaded = await this.roomService.MarkAsReadMessage(
       roomId,
       authorId,
     );
     if (isMessagesReaded) {
-      this.getRoomByIdAndSend(roomId, roomName);
+      this.getRoomByIdAndSend(roomId, roomName, currentUserId);
     }
   }
 
-  async getRoomByIdAndSend(roomId: string, roomName: string) {
-    const room = await this.roomService.getRoomById(roomId);
+  async getRoomByIdAndSend(
+    roomId: string,
+    roomName: string,
+    currentUserId: string,
+  ) {
+    const room = await this.roomService.getRoomMessageWithUnreadMessageById(
+      roomId,
+      currentUserId,
+    );
     this.server.to(roomName).emit(CHAT_EVENTS.UPDATE_ROOM_LISTENER, room);
   }
   // @SubscribeMessage('join_room')

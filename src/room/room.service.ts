@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRoomDto } from './dto/CreateRoomDto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { transformRoomWithUserData } from './utils/transformRoomList';
+import {
+  transformRoomWithUnreadMessage,
+  transformRoomWithUserData,
+} from './utils/transformRoomList';
 
 @Injectable()
 export class RoomService {
@@ -35,7 +38,7 @@ export class RoomService {
     return transformRoomList;
   }
 
-  async getRoomById(roomId: string) {
+  async getRoomMessageById(roomId: string) {
     const room = await this.prismaService.room.findUnique({
       where: {
         id: roomId,
@@ -49,6 +52,18 @@ export class RoomService {
       },
     });
     return room;
+  }
+
+  async getRoomMessageWithUnreadMessageById(
+    roomId: string,
+    currentUserId: string,
+  ) {
+    const room = await this.getRoomMessageById(roomId);
+    const roomWithUnreadMessage = transformRoomWithUnreadMessage(
+      room,
+      currentUserId,
+    );
+    return roomWithUnreadMessage;
   }
 
   async createRoom(roomName: string) {

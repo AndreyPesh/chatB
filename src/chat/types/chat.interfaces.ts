@@ -13,6 +13,7 @@ export interface GetListRoomPayload {
 export interface UpdateRoomPayload {
   roomId: string;
   roomName: string;
+  currentUserId: string;
 }
 
 export interface MessagePayload {
@@ -26,6 +27,7 @@ export interface ReadMessagePayload {
   roomName: string;
   roomId: string;
   authorId: string;
+  currentUserId: string;
 }
 
 export interface ServerToClientEvents {
