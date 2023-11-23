@@ -34,7 +34,7 @@ export class RoomService {
 
   async getAllRoomByUserId(userId: string) {
     const userRoomList = await this.getAllRoomByUserIdFromDB(userId);
-    const transformRoomList = transformRoomWithUserData(userRoomList, userId);
+    const transformRoomList = transformRoomWithUserData(userRoomList);
     return transformRoomList;
   }
 
@@ -55,15 +55,9 @@ export class RoomService {
     return room;
   }
 
-  async getRoomMessageWithUnreadMessageById(
-    roomId: string,
-    currentUserId: string,
-  ) {
+  async getRoomMessageWithUnreadMessageById(roomId: string) {
     const room = await this.getRoomMessageById(roomId);
-    const roomWithUnreadMessage = transformRoomWithUnreadMessage(
-      room,
-      currentUserId,
-    );
+    const roomWithUnreadMessage = transformRoomWithUnreadMessage(room);
     return roomWithUnreadMessage;
   }
 

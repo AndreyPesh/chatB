@@ -14,12 +14,10 @@ const unreadMessageCounter = (messages: Messages[], userId: string) => {
 const shapeUserData = (
   usersInRoom: { user: Users }[],
   messages: Messages[],
-  currentUserId: string,
 ) => {
   return usersInRoom.map(({ user }) => {
     const { id, firstName, lastName, email } = user;
     const fullName = firstName + ' ' + lastName;
-    const isParticipant = currentUserId !== id;
     const numberOfUnreadMessage = unreadMessageCounter(messages, id);
     return {
       id,
@@ -27,7 +25,6 @@ const shapeUserData = (
       lastName,
       email,
       fullName,
-      isParticipant,
       numberOfUnreadMessage,
     };
   });
@@ -35,21 +32,17 @@ const shapeUserData = (
 
 export const transformRoomWithUserData = (
   listRooms: ListRoomDataDb,
-  currentUserId: string,
 ): RoomData[] => {
   const roomList = listRooms.map(({ room }) => {
     const { id, messages, name } = room;
-    const users = shapeUserData(room.users, messages, currentUserId);
+    const users = shapeUserData(room.users, messages);
     return { id, roomName: name, messages, users };
   });
   return roomList;
 };
 
-export const transformRoomWithUnreadMessage = (
-  room: RoomDataDb,
-  currentUserId: string,
-): RoomData => {
+export const transformRoomWithUnreadMessage = (room: RoomDataDb): RoomData => {
   const { id, messages, name } = room;
-  const users = shapeUserData(room.users, messages, currentUserId);
+  const users = shapeUserData(room.users, messages);
   return { id, roomName: name, messages, users };
 };
