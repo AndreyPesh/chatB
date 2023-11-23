@@ -1,12 +1,10 @@
 import { Messages, Users } from '@prisma/client';
 import { RoomData } from '../types/room.interface';
-import { ListRoomData, RoomDataDb } from '../types/room.types';
+import { ListRoomDataDb, RoomDataDb } from '../types/room.types';
 
-const unreadMessageCounter = (messages: Messages[], currentUserId: string) => {
-  console.log('userID ', currentUserId);
-
+const unreadMessageCounter = (messages: Messages[], userId: string) => {
   return messages.reduce((counter, message) => {
-    if (!message.isReaded && message.authorId !== currentUserId) {
+    if (!message.isReaded && message.authorId !== userId) {
       return (counter += 1);
     }
     return counter;
@@ -15,12 +13,14 @@ const unreadMessageCounter = (messages: Messages[], currentUserId: string) => {
 
 const shapeUserData = (
   usersInRoom: { user: Users }[],
+  messages: Messages[],
   currentUserId: string,
 ) => {
   return usersInRoom.map(({ user }) => {
     const { id, firstName, lastName, email } = user;
     const fullName = firstName + ' ' + lastName;
     const isParticipant = currentUserId !== id;
+    const numberOfUnreadMessage = unreadMessageCounter(messages, id);
     return {
       id,
       firstName,
@@ -28,19 +28,19 @@ const shapeUserData = (
       email,
       fullName,
       isParticipant,
+      numberOfUnreadMessage,
     };
   });
 };
 
 export const transformRoomWithUserData = (
-  listRooms: ListRoomData,
+  listRooms: ListRoomDataDb,
   currentUserId: string,
 ): RoomData[] => {
   const roomList = listRooms.map(({ room }) => {
     const { id, messages, name } = room;
-    const numberOfUnreadMessage = unreadMessageCounter(messages, currentUserId);
-    const users = shapeUserData(room.users, currentUserId);
-    return { id, roomName: name, messages, numberOfUnreadMessage, users };
+    const users = shapeUserData(room.users, messages, currentUserId);
+    return { id, roomName: name, messages, users };
   });
   return roomList;
 };
@@ -48,8 +48,8 @@ export const transformRoomWithUserData = (
 export const transformRoomWithUnreadMessage = (
   room: RoomDataDb,
   currentUserId: string,
-) => {
+): RoomData => {
   const { id, messages, name } = room;
-  const numberOfUnreadMessage = unreadMessageCounter(messages, currentUserId);
-  return { id, roomName: name, messages, numberOfUnreadMessage };
+  const users = shapeUserData(room.users, messages, currentUserId);
+  return { id, roomName: name, messages, users };
 };

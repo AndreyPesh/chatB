@@ -49,6 +49,7 @@ export class RoomService {
             createdAt: 'asc',
           },
         },
+        users: { include: { user: true } },
       },
     });
     return room;

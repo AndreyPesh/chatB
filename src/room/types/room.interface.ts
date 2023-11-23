@@ -7,12 +7,13 @@ interface RoomUserData {
   email: string;
   isParticipant: boolean;
   fullName: string;
+  numberOfUnreadMessage: number;
 }
 
 export interface RoomData {
   id: string;
   roomName: string;
-  numberOfUnreadMessage: number;
+  // numberOfUnreadMessage: { userId: string; count: number }[];
   messages: Messages[];
   users: RoomUserData[];
 }
