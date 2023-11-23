@@ -1,6 +1,6 @@
 import { RoomService } from '../room.service';
 
-export type ListRoomData = Awaited<
+export type ListRoomDataDb = Awaited<
   ReturnType<RoomService['getAllRoomByUserIdFromDB']>
 >;
 
