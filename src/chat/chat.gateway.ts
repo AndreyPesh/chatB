@@ -87,6 +87,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return userRoomsList;
   }
 
+  @SubscribeMessage('typing')
+  async typingHandler() {
+    console.log('typing');
+  }
+
   // @SubscribeMessage(CHAT_EVENTS.UPDATE_ROOM_EMIT)
   // async updateRoomById(@MessageBody() updateRoomPayload: UpdateRoomPayload) {
   //   const { roomId, roomName, currentUserId } = updateRoomPayload;
